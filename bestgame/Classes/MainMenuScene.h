@@ -11,11 +11,13 @@
 
 #include "cocos2d.h"
 #include "cocos-ext.h"
+#include "JNIBridgeCallback.h"
 
 class MainMenuScene :
 public cocos2d::CCLayer,
 public cocos2d::extension::CCBSelectorResolver,
-public cocos2d::extension::CCBMemberVariableAssigner
+public cocos2d::extension::CCBMemberVariableAssigner,
+public JNIBridgeCallback
 {
 public:
 
@@ -27,6 +29,10 @@ public:
     virtual cocos2d::SEL_MenuHandler onResolveCCBCCMenuItemSelector(CCObject * pTarget, const char* pSelectorName);    
     virtual cocos2d::extension::SEL_CCControlHandler onResolveCCBCCControlSelector(CCObject * pTarget, const char* pSelectorName);
     virtual bool onAssignCCBMemberVariable(CCObject* pTarget, const char* pMemberVariableName, CCNode* pNode);
+
+    virtual void sdkCompletedWithExit(JNIEnv*, jobject);
+    virtual void sdkCompletedWithMatch(JNIEnv*, jobject, jstring, jstring, jlong, jint, jint);
+    virtual void sdkFailed(JNIEnv*, jobject, jstring, jobject);
 
     virtual void onEnter();
     virtual void onExit();
