@@ -1,0 +1,43 @@
+# built application files
+*.apk
+*.ap_
+
+# files for the dex VM
+*.dex
+
+# Java class files
+*.class
+
+# generated files
+bin/
+gen/
+
+# Local configuration file (sdk path, etc)
+local.properties
+
+# Eclipse project files
+.classpath
+.project
+
+# Cocos2d-x
+cocos2dx/platform/android/java/bin
+cocos2dx/platform/android/java/gen
+
+# BestGame
+bestgame/proj.android/.settings
+bestgame/proj.android/.cproject
+bestgame/proj.android/.project
+bestgame/proj.android/bin
+bestgame/proj.android/gen
+bestgame/proj.android/obj
+bestgame/proj.android/libs/armeabi
+
+# Generated
+*.DS_Store
+
+# Intellij and Eclipse
+.idea
+*.iml
+**/.project
+**/.classpath
+**/.cproject
