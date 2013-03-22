@@ -5,12 +5,17 @@ import org.grantoo.lib.propeller.PropellerSDK;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
+import com.google.android.gcm.GCMRegistrar;
+
 
 /*******************************************************************************
  * Cocos2d-x Android Activity entry point.
  */
 public class bestgame extends Cocos2dxActivity {
+
+	static final String SENDER_ID = "234929947880";
 
 	private static Cocos2dxActivity bestgameActivity = null;
 
@@ -45,6 +50,18 @@ public class bestgame extends Cocos2dxActivity {
 		setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
 		PropellerSDK.onCreate(this);
+
+		GCMRegistrar.checkDevice(this);
+		GCMRegistrar.checkManifest(this);
+
+		String regId = GCMRegistrar.getRegistrationId(this);
+
+		if (TextUtils.isEmpty(regId)) {
+			GCMRegistrar.register(this, SENDER_ID);
+		} else {
+			// we have the registration id now.
+			PropellerSDK.setNotificationToken(regId);
+		}
 	}
 
 	/***************************************************************************
