@@ -2,6 +2,11 @@
 #include "MainMenuScene.h"
 #include "AppMacros.h"
 #include "SimpleAudioEngine.h"
+#include "JNIBridge.h"
+
+#include "platform/android/jni/JniHelper.h"
+
+#include "GrantooProperties.h"
 
 USING_NS_CC;
 
@@ -48,6 +53,22 @@ bool AppDelegate::applicationDidFinishLaunching() {
 
     // set FPS. the default value is 1.0/60 if you don't call this
     pDirector->setAnimationInterval(1.0 / 60);
+
+#if defined(DEBUG)
+    // This is for the debug special startup
+    JNIBridge::useDebugServers(GRANTOO_GAME_SERVER_URL, GRANTOO_GRANTOO_API_URL, GRANTOO_TOURNAMENT_API_URL, GRANTOO_CHALLENGE_API_URL);
+    JNIBridge::initialize(GRANTOO_GAME_ID, GRANTOO_GAME_SECRET);
+#elif defined(TESTBUILD)
+    // This is for the test startup
+    JNIBridge::useSandboxServers();
+    // use the test game ids
+    JNIBridge::initialize("50ac1a38f6aae30200000001", "c38b6697-b453-99c6-bc59-b50f0eca347f");
+#else
+    // use the production game ids
+    JNIBridge::initialize("50b665d167379a020000000b", "a918a013-842e-ceb9-19ec-c0f981894d85");
+#endif
+
+    JNIBridge::instance()->setOrientation("landscape");
 
     // load first scene
     cocos2d::extension::CCNodeLoaderLibrary * ccNodeLoaderLibrary = cocos2d::extension::CCNodeLoaderLibrary::sharedCCNodeLoaderLibrary();
