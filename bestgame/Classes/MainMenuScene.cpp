@@ -12,6 +12,7 @@
 #include "SimpleAudioEngine.h"
 #include "GamePayload.h"
 #include "platform/android/jni/JniHelper.h"
+#include "JNIBridge.h"
 
 USING_NS_CC;
 USING_NS_CC_EXT;
@@ -91,11 +92,20 @@ bool MainMenuScene::onAssignCCBMemberVariable(CCObject* pTarget, const char* pMe
 }
 
 void MainMenuScene::updateChallengeCount(float dt) {
+    JNIBridge::instance()->syncChallengeCounts();
     scheduleOnce(schedule_selector(MainMenuScene::displayChallengeCount), 3);
 }
 
 void MainMenuScene::displayChallengeCount(float dt) {
-	challengeLabel->getParent()->setVisible(false);
+    int challengeCount = JNIBridge::instance()->getChallengeCounts();
+    if (challengeCount > 0) {
+        char string[12] = {0};
+        sprintf(string, "%d", challengeCount);
+        challengeLabel->setString(string);
+        challengeLabel->getParent()->setVisible(true);
+    } else {
+        challengeLabel->getParent()->setVisible(false);
+    }
 }
 
 bool MainMenuScene::sendResult(void) {
@@ -106,6 +116,12 @@ bool MainMenuScene::sendResult(void) {
         //stopCocos();
         CocosDenshion::SimpleAudioEngine::sharedEngine()->stopBackgroundMusic();
         CocosDenshion::SimpleAudioEngine::sharedEngine()->playBackgroundMusic("sound/outgameBGM.mp3", false);
+
+        JNIBridge::instance()->launchWithMatchResult(
+        		payLoad->getTournID().c_str(),
+        		payLoad->getMatchID().c_str(),
+        		payLoad->getScore(),
+        		this);
 
         payLoad->clear();
         sentResult = true;
@@ -139,6 +155,8 @@ void MainMenuScene::goPlay(CCObject *pSender) {
 
 void MainMenuScene::goLaunch(CCObject *pSender) {
     CCLOG("goLaunch clicked");
+    stopCocos();
+    JNIBridge::instance()->launch(this);
 }
 
 void MainMenuScene::goStats(CCObject *pSender) {
@@ -213,6 +231,35 @@ void MainMenuScene::goSoundOn(CCObject *pSender) {
 
 void MainMenuScene::keyBackClicked() {
     CCDirector::sharedDirector()->end();
+}
+
+void MainMenuScene::sdkCompletedWithExit(JNIEnv* env, jobject context) {
+	CCLOG("sdkCompletedWithExit");
+	startCocos();
+}
+
+void MainMenuScene::sdkCompletedWithMatch(JNIEnv* env, jobject context, jstring tournId, jstring matchId, jlong seed, jint round, jint gameType) {
+	CCLOG("sdkCompletedWithMatch");
+	startCocos();
+
+	GamePayload* payload = GamePayload::instance();
+
+	if (payload) {
+		payload->setTournID(JniHelper::jstring2string(tournId));
+		payload->setMatchID(JniHelper::jstring2string(matchId));
+		payload->setSeed((int) seed);
+		payload->setRound((int) round);
+		payload->setGameType((int) gameType);
+		payload->setActiveFlag(true);
+		payload->setCompleteFlag(false);
+	}
+
+    this->scheduleOnce(schedule_selector(MainMenuScene::delayedPlay), 0);
+}
+
+void MainMenuScene::sdkFailed(JNIEnv* env, jobject context, jstring message, jobject result) {
+	CCLOG("sdkFailed");
+	startCocos();
 }
 
 void MainMenuScene::startCocos() {

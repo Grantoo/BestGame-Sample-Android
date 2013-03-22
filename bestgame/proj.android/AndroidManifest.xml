@@ -9,6 +9,15 @@
         android:minSdkVersion="10"
         android:targetSdkVersion="17"/>
 
+    <!-- web view -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
+    <!-- checking data network connection status -->
+    <uses_permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+
     <supports-screens
         android:anyDensity="true"
         android:largeScreens="true"
@@ -39,6 +48,10 @@
             </intent-filter>
             
         </activity>
+        
+        <activity
+            android:name="org.grantoo.lib.propeller.PropellerSDKActivity"
+            android:screenOrientation="landscape"/>
         
     </application>
 
