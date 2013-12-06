@@ -11,6 +11,8 @@
 #include "GameHistory.h"
 #include "SimpleAudioEngine.h"
 
+#include "GamePayload.h"
+
 USING_NS_CC;
 USING_NS_CC_EXT;
 
@@ -65,8 +67,22 @@ bool GameScene::init()
     }
     
     goBackPressed = false;
+    bool seeded = false;
 
-	mysrandom(time(0));
+    GamePayload *payLoad = GamePayload::instance();
+
+	if ((payLoad != NULL) && payLoad->getActiveFlag()) {
+		if (payLoad->getGameType() == OPTIONS_GAMETYPE_SAMESY_VALUE) {
+			int seed = payLoad->getSeed();
+			int round = payLoad->getRound();
+			mysrandom(seed + round);
+			seeded = true;
+		}
+	}
+
+	if (!seeded) {
+		mysrandom(time(0));
+	}
     
     score = 0;
     presses = 0;
@@ -215,6 +231,17 @@ void GameScene::finalize(void)
 {
     CCLOG("finalize");
     
+    // load up the payload if needed
+    GamePayload *payLoad = GamePayload::instance();
+
+    if (payLoad && payLoad->getActiveFlag()) {
+    	CCLOG("setting Payload");
+
+    	payLoad->setScore(score);
+    	payLoad->setCompleteFlag(true);
+    	payLoad->store();
+    }
+
     // add to History
     GameHistory::instance()->updateHistoryWithScore(score, presses);
     

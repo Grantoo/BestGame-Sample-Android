@@ -12,7 +12,9 @@ LOCAL_SRC_FILES := bestgame/main.cpp \
                    ../../Classes/StatsScene.cpp \
                    ../../Classes/GameScene.cpp \
                    ../../Classes/RulesScene.cpp \
-                   ../../Classes/GameHistory.cpp
+                   ../../Classes/GameHistory.cpp \
+                   ../../Classes/GamePayload.cpp \
+                   ../../Classes/JNIBridge.cpp
                    
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../Classes                   
 

@@ -12,10 +12,15 @@
 #include "cocos2d.h"
 #include "cocos-ext.h"
 
+#include "JNIBridgeCallback.h"
+#include "JNIBridgeBroadcastReceiver.h"
+
 class MainMenuScene :
 public cocos2d::CCLayer,
 public cocos2d::extension::CCBSelectorResolver,
-public cocos2d::extension::CCBMemberVariableAssigner
+public cocos2d::extension::CCBMemberVariableAssigner,
+public JNIBridgeCallback,
+public JNIBridgeBroadcastReceiver
 {
 public:
 
@@ -32,6 +37,13 @@ public:
     virtual void onExit();
     
     virtual void keyBackClicked();
+
+    virtual void sdkCompletedWithExit(JNIEnv*, jobject);
+    virtual void sdkCompletedWithMatch(JNIEnv*, jobject, jstring, jstring, jlong, jint, jint);
+    virtual void sdkFailed(JNIEnv*, jobject, jstring, jobject);
+
+    virtual void updatedChallengeCount(JNIEnv*, jobject, jint);
+    virtual void updatedTournamentInfo(JNIEnv*, jobject, jstring, jstring, jstring, jlong, jlong, jstring);
 
     void goPlay(cocos2d::CCObject *pSender);
     void goLaunch(cocos2d::CCObject *pSender);

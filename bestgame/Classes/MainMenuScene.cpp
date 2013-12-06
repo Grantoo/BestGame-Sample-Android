@@ -12,6 +12,9 @@
 #include "SimpleAudioEngine.h"
 #include "platform/android/jni/JniHelper.h"
 
+#include "GamePayload.h"
+#include "JNIBridge.h"
+
 USING_NS_CC;
 USING_NS_CC_EXT;
 
@@ -107,6 +110,69 @@ void MainMenuScene::keyBackClicked() {
     CCDirector::sharedDirector()->end();
 }
 
+void MainMenuScene::sdkCompletedWithExit(JNIEnv* env, jobject context) {
+	CCLOG("sdkCompletedWithExit");
+	startCocos();
+
+    updateChallengeCount();
+    updateTournamentInfo();
+}
+
+void MainMenuScene::sdkCompletedWithMatch(JNIEnv* env, jobject context, jstring tournId, jstring matchId, jlong seed, jint round, jint gameType) {
+	CCLOG("sdkCompletedWithMatch");
+	startCocos();
+
+	GamePayload* payload = GamePayload::instance();
+
+	if (payload) {
+		payload->setTournID(JniHelper::jstring2string(tournId));
+		payload->setMatchID(JniHelper::jstring2string(matchId));
+		payload->setSeed((int) seed);
+		payload->setRound((int) round);
+		payload->setGameType((int) gameType);
+		payload->setActiveFlag(true);
+		payload->setCompleteFlag(false);
+	}
+
+    this->scheduleOnce(schedule_selector(MainMenuScene::delayedPlay), 0);
+}
+
+void MainMenuScene::sdkFailed(JNIEnv* env, jobject context, jstring message, jobject result) {
+	CCLOG("sdkFailed");
+	startCocos();
+
+    updateChallengeCount();
+    updateTournamentInfo();
+}
+
+void MainMenuScene::updatedChallengeCount(JNIEnv* env, jobject context, jint count) {
+	CCLOG("updatedChallengeCount");
+
+	challengeCount = (int) count;
+
+	scheduleOnce(schedule_selector(MainMenuScene::displayChallengeCount), 0);
+}
+
+void MainMenuScene::updatedTournamentInfo(JNIEnv* env, jobject context, jstring name, jstring campaignName, jstring sponsorName, jlong startDate, jlong endDate, jstring logo) {
+	CCLOG("updatedTournamentInfo");
+
+	const char* tournamentName = env->GetStringUTFChars(name, NULL);
+	const char* tournamentCampaignName = env->GetStringUTFChars(campaignName, NULL);
+	const char* tournamentSponsorName = env->GetStringUTFChars(sponsorName, NULL);
+	long tournamentStartDate = (long) startDate;
+	long tournamentEndDate = (long) endDate;
+	const char* tournamentLogo = env->GetStringUTFChars(logo, NULL);
+
+	isTournamentRunning = (tournamentStartDate != 0) && (tournamentEndDate != 0) && (tournamentStartDate < tournamentEndDate);
+
+	env->ReleaseStringUTFChars(name, tournamentName);
+	env->ReleaseStringUTFChars(campaignName, tournamentCampaignName);
+	env->ReleaseStringUTFChars(sponsorName, tournamentSponsorName);
+	env->ReleaseStringUTFChars(logo, tournamentLogo);
+
+	scheduleOnce(schedule_selector(MainMenuScene::displayTournamentInfo), 0);
+}
+
 void MainMenuScene::goPlay(CCObject *pSender) {
     CCLOG("goPlay clicked");
     cocos2d::extension::CCNodeLoaderLibrary * ccNodeLoaderLibrary = cocos2d::extension::CCNodeLoaderLibrary::sharedCCNodeLoaderLibrary();
@@ -128,7 +194,8 @@ void MainMenuScene::goPlay(CCObject *pSender) {
 
 void MainMenuScene::goLaunch(CCObject *pSender) {
     CCLOG("goLaunch clicked");
-    // TODO: launch multiplayer
+    stopCocos();
+    JNIBridge::instance()->launch(this);
 }
 
 void MainMenuScene::goStats(CCObject *pSender) {
@@ -237,12 +304,29 @@ bool MainMenuScene::sendFeeback()
 }
 
 bool MainMenuScene::sendResult() {
-	// TODO: submit score
-    return false;
+	bool sentResult = false;
+
+	GamePayload *payLoad = GamePayload::instance();
+
+	if (payLoad && payLoad->getActiveFlag() && payLoad->getCompleteFlag()) {
+		CCLOG("sendResult");
+
+		JNIBridge::instance()->launchWithMatchResult(
+				payLoad->getTournID().c_str(),
+				payLoad->getMatchID().c_str(),
+				payLoad->getScore(),
+				this);
+
+		payLoad->clear();
+
+		sentResult = true;
+	}
+
+	return sentResult;
 }
 
 void MainMenuScene::updateChallengeCount() {
-	// TODO: request latest challenge count
+	JNIBridge::instance()->syncChallengeCounts(this);
     scheduleOnce(schedule_selector(MainMenuScene::displayChallengeCount), 3);
 }
 
@@ -260,7 +344,7 @@ void MainMenuScene::displayChallengeCount() {
 }
 
 void MainMenuScene::updateTournamentInfo() {
-	// TODO: request latest tournament info
+	JNIBridge::instance()->syncTournamentInfo(this);
 	scheduleOnce(schedule_selector(MainMenuScene::displayTournamentInfo), 3);
 }
 
