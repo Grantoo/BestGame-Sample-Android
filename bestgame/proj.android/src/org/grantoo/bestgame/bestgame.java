@@ -11,7 +11,9 @@ import android.content.IntentFilter;
 import android.media.AudioManager;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
+import android.text.TextUtils;
 import android.util.Log;
+import com.google.android.gcm.GCMRegistrar;
 
 /*******************************************************************************
  * Cocos2d-x Android Activity entry point.
@@ -23,6 +25,11 @@ public class bestgame extends Cocos2dxActivity {
 	private IntentFilter mIntentFilter;
 
 	private BroadcastReceiver mBroadcastReceiver;
+
+	public static final String SENDER_ID =
+		BuildConfig.DEBUG ?
+			"234929947880" :
+			"204874537496";
 
 	/***************************************************************************
 	 * Static initializer to load the "C" library.
@@ -53,6 +60,8 @@ public class bestgame extends Cocos2dxActivity {
 		super.onCreate(savedInstanceState);
 
 		PropellerSDK.onCreate(this);
+
+		registerGCM(this, SENDER_ID);
 
 		setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
@@ -238,6 +247,37 @@ public class bestgame extends Cocos2dxActivity {
 				}
 			}
 		};
+	}
+
+	/***************************************************************************
+	 * Registers the device for GCM push notifications.
+	 * 
+	 * @param context Calling context.
+	 * @param senderId Push notification sender ID.
+	 */
+	private void registerGCM(Context context, String senderId) {
+		try {
+			GCMRegistrar.checkDevice(context);
+		} catch (UnsupportedOperationException unsupportedOperationException) {
+			// device does not support GCM
+			return;
+		}
+
+		try {
+			GCMRegistrar.checkManifest(context);
+		} catch (IllegalStateException illegalStateException) {
+			// manifest is not properly configured for GCM
+			return;
+		}
+
+		String registrationId = GCMRegistrar.getRegistrationId(context);
+
+		if (TextUtils.isEmpty(registrationId)) {
+			GCMRegistrar.register(context, senderId);
+		} else {
+			// we have the registration id now.
+			PropellerSDK.setNotificationToken(registrationId);
+		}
 	}
 
 	/***************************************************************************
