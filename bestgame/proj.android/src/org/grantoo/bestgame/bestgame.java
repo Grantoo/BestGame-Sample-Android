@@ -1,5 +1,7 @@
 package org.grantoo.bestgame;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import org.cocos2dx.lib.Cocos2dxActivity;
 import org.grantoo.lib.propeller.PropellerSDK;
@@ -68,6 +70,8 @@ public class bestgame extends Cocos2dxActivity {
 		mIntentFilter = new IntentFilter();
 		mIntentFilter.addAction("PropellerSDKChallengeCountChanged");
 		mIntentFilter.addAction("PropellerSDKTournamentInfo");
+		mIntentFilter.addAction("PropellerSDKVirtualGoodList");
+		mIntentFilter.addAction("PropellerSDKVirtualGoodRollback");
 
 		mBroadcastReceiver = getBroadcastReceiver();
 	}
@@ -176,6 +180,7 @@ public class bestgame extends Cocos2dxActivity {
 	private BroadcastReceiver getBroadcastReceiver() {
 		return new PropellerSDKBroadcastReceiver() {
 
+			@SuppressWarnings("unchecked")
 			@Override
 			public void onReceive(Context context, String action, Map<String, Object> data) {
 				if (action.equals("PropellerSDKChallengeCountChanged")) {
@@ -244,6 +249,49 @@ public class bestgame extends Cocos2dxActivity {
 						startDate,
 						endDate,
 						logo);
+				} else if (action.equals("PropellerSDKVirtualGoodList")) {
+					String transactionId = "";
+					Object transactionIdObject = data.get("transactionID");
+
+					if ((transactionIdObject != null) &&
+						(transactionIdObject instanceof String)) {
+						transactionId = (String) transactionIdObject;
+					}
+
+					List<String> virtualGoods = new ArrayList<String>();
+					Object virtualGoodsObject = data.get("virtualGoods");
+
+					if ((virtualGoodsObject != null) &&
+						(virtualGoodsObject instanceof List)) {
+						for (Object virtualGoodObject : (List<Object>) virtualGoodsObject) {
+							if ((virtualGoodObject == null) ||
+								!(virtualGoodObject instanceof Map)) {
+								continue;
+							}
+
+							Map<String, Object> virtualGood = (Map<String, Object>) virtualGoodObject;
+							Object virtualGoodIdObject = virtualGood.get("goodId");
+
+							if ((virtualGoodIdObject == null) ||
+								!(virtualGoodIdObject instanceof String)) {
+								continue;
+							}
+
+							virtualGoods.add((String) virtualGoodIdObject);
+						}
+					}
+
+					NativeBridge.nativeUpdatedVirtualGoods(transactionId, virtualGoods.toArray());
+				} else if (action.equals("PropellerSDKVirtualGoodRollback")) {
+					String transactionId = "";
+					Object transactionIdObject = data.get("transactionID");
+
+					if ((transactionIdObject != null) &&
+						(transactionIdObject instanceof String)) {
+						transactionId = (String) transactionIdObject;
+					}
+
+					NativeBridge.nativeRollbackVirtualGoods(transactionId);
 				}
 			}
 		};

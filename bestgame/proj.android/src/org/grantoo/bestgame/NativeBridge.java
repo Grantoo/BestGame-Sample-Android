@@ -256,6 +256,29 @@ public class NativeBridge extends PropellerSDKListener {
 	}
 
 	/***************************************************************************
+	 * Sync the virtual goods.
+	 * 
+	 * @return True if the virtual goods synchronization request was made, false
+	 *         otherwise.
+	 */
+	public boolean syncVirtualGoods() {
+		return PropellerSDK.instance().syncVirtualGoods();
+	}
+
+	/***************************************************************************
+	 * Acknowledge the virtual goods.
+	 * 
+	 * @param transactionId Transaction ID of the virtual goods to acknlowledge.
+	 * @param consumed Flags whether or not the virtual goods being acknowledged
+	 *        were consumed, false otherwise.
+	 * @return True if the virtual good acknowledgment request was made, false
+	 *         otherwise.
+	 */
+	public boolean acknowledgeVirtualGoods(String transactionId, boolean consumed) {
+		return PropellerSDK.instance().acknowledgeVirtualGoods(transactionId, consumed);
+	}
+
+	/***************************************************************************
 	 * Notifies the native libraries to deallocate global references in the JNI
 	 * bridge.
 	 */
@@ -337,5 +360,22 @@ public class NativeBridge extends PropellerSDKListener {
 	 * @param logo Tournament logo.
 	 */
 	public static native void nativeUpdatedTournamentInfo(String name, String campaignName, String sponsorName, long startDate, long endDate, String logo);
+
+	/***************************************************************************
+	 * Notifies the native libraries that the virtual goods have been updated.
+	 * 
+	 * @param transactionId transaction ID of the virtual goods being updated.
+	 * @param virtualGoods Updated list of the virtual goods being updated.
+	 */
+	public static native void nativeUpdatedVirtualGoods(String transactionId, Object[] virtualGoods);
+
+	/***************************************************************************
+	 * Notifies the native libraries that the virtual goods have been updated.
+	 * 
+	 * @param transactionId transaction ID of the virtual goods being rolled
+	 *        back.
+	 * @param virtualGoods Updated list of the virtual goods being rolled back.
+	 */
+	public static native void nativeRollbackVirtualGoods(String transactionId);
 
 }

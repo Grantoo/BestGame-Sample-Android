@@ -9,6 +9,8 @@ public:
 
 	virtual void updatedChallengeCount(JNIEnv*, jobject, jint) = 0;
 	virtual void updatedTournamentInfo(JNIEnv*, jobject, jstring, jstring, jstring, jlong, jlong, jstring) = 0;
+	virtual void updatedVirtualGoods(JNIEnv*, jobject, jstring, jobjectArray) = 0;
+	virtual void rollbackVirtualGoods(JNIEnv*, jobject, jstring) = 0;
 
 };
 

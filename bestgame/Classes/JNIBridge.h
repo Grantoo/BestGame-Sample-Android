@@ -40,10 +40,16 @@ public:
 	// sync methods called from C++ into the bridge
 	void syncChallengeCounts(JNIBridgeBroadcastReceiver*);
 	void syncTournamentInfo(JNIBridgeBroadcastReceiver*);
+	bool syncVirtualGoods(JNIBridgeBroadcastReceiver*);
+
+	bool acknowledgeVirtualGoods(JNIBridgeBroadcastReceiver*, const char*, bool);
 
 	// broadcast methods called from Java into the bridge
 	void updatedChallengeCount(JNIEnv*, jobject, jint);
 	void updatedTournamentInfo(JNIEnv*, jobject, jstring, jstring, jstring, jlong, jlong, jstring);
+	void updatedVirtualGoods(JNIEnv*, jobject, jstring, jobjectArray);
+
+	void rollbackVirtualGoods(JNIEnv*, jobject, jstring);
 
 private:
 

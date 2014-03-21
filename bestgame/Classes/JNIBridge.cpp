@@ -46,6 +46,14 @@ bool Java_org_grantoo_bestgame_NativeBridge_nativeSdkSocialShare(JNIEnv* env, jo
     return JNIBridge::instance()->sdkSocialShare(env, thiz, subject, longMessage, shortMessage, linkUrl);
 }
 
+void Java_org_grantoo_bestgame_NativeBridge_nativeUpdatedVirtualGoods(JNIEnv* env, jobject thiz, jstring transactionId, jobjectArray virtualGoods) {
+    JNIBridge::instance()->updatedVirtualGoods(env, thiz, transactionId, virtualGoods);
+}
+
+void Java_org_grantoo_bestgame_NativeBridge_nativeRollbackVirtualGoods(JNIEnv* env, jobject thiz, jstring transactionId) {
+    JNIBridge::instance()->rollbackVirtualGoods(env, thiz, transactionId);
+}
+
 }
 
 static JNIBridge* s_instance = 0;
@@ -455,6 +463,84 @@ void JNIBridge::updatedTournamentInfo(JNIEnv* env, jobject context, jstring name
 	if (m_broadcastReceiver) {
 		m_broadcastReceiver->updatedTournamentInfo(env, context, name, campaignName, sponsorName, startDate, endDate, logo);
 	}
+}
+
+bool JNIBridge::syncVirtualGoods(JNIBridgeBroadcastReceiver* broadcastReceiver) {
+    m_broadcastReceiver = broadcastReceiver;
+
+    JniMethodInfo jniMethodInfo;
+
+    if (!JniHelper::getMethodInfo(
+        jniMethodInfo,
+        "org/grantoo/bestgame/NativeBridge",
+        "syncVirtualGoods",
+        "()Z")) {
+        // method info could not be obtained
+        return false;
+    }
+
+    jboolean methodResult = jniMethodInfo.env->CallBooleanMethod(
+        m_nativeBridge,
+        jniMethodInfo.methodID);
+
+    if (jniMethodInfo.env->ExceptionCheck()) {
+        // exception thrown in the called method
+        return false;
+    }
+
+    return (bool) methodResult;
+}
+
+bool JNIBridge::acknowledgeVirtualGoods(JNIBridgeBroadcastReceiver* broadcastReceiver, const char* transactionId, bool consumed) {
+    m_broadcastReceiver = broadcastReceiver;
+
+    JniMethodInfo jniMethodInfo;
+
+    if (!JniHelper::getMethodInfo(
+        jniMethodInfo,
+        "org/grantoo/bestgame/NativeBridge",
+        "acknowledgeVirtualGoods",
+        "(Ljava/lang/String;Z)Z")) {
+        // method info could not be obtained
+        return false;
+    }
+
+    JNIEnv* env = 0;
+
+    if (!getEnv(&env)) {
+        // unable to get the environment
+        return false;
+    }
+
+    jstring jTransId = env->NewStringUTF(transactionId);
+    jboolean jConsumed = (jboolean) consumed;
+
+    jboolean methodResult = jniMethodInfo.env->CallBooleanMethod(
+        m_nativeBridge,
+        jniMethodInfo.methodID,
+        jTransId,
+        jConsumed);
+
+    env->DeleteLocalRef(jTransId);
+
+    if (jniMethodInfo.env->ExceptionCheck()) {
+        // exception thrown in the called method
+        return false;
+    }
+
+    return (bool) methodResult;
+}
+
+void JNIBridge::updatedVirtualGoods(JNIEnv* env, jobject context, jstring transactionId, jobjectArray virtualGoods) {
+    if (m_broadcastReceiver) {
+        m_broadcastReceiver->updatedVirtualGoods(env, context, transactionId, virtualGoods);
+    }
+}
+
+void JNIBridge::rollbackVirtualGoods(JNIEnv* env, jobject context, jstring transactionId) {
+    if (m_broadcastReceiver) {
+        m_broadcastReceiver->rollbackVirtualGoods(env, context, transactionId);
+    }
 }
 
 #pragma mark -

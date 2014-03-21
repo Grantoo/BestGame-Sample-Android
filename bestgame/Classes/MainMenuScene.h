@@ -15,6 +15,7 @@
 #include "JNIBridgeCallback.h"
 #include "JNIBridgeBroadcastReceiver.h"
 
+
 class MainMenuScene :
 public cocos2d::CCLayer,
 public cocos2d::extension::CCBSelectorResolver,
@@ -47,6 +48,8 @@ public:
 
     virtual void updatedChallengeCount(JNIEnv*, jobject, jint);
     virtual void updatedTournamentInfo(JNIEnv*, jobject, jstring, jstring, jstring, jlong, jlong, jstring);
+    virtual void updatedVirtualGoods(JNIEnv*, jobject, jstring, jobjectArray);
+    virtual void rollbackVirtualGoods(JNIEnv*, jobject, jstring);
 
     void goPlay(cocos2d::CCObject *pSender);
     void goLaunch(cocos2d::CCObject *pSender);
@@ -74,6 +77,8 @@ private:
 
     void updateTournamentInfo();
     void displayTournamentInfo();
+
+    void updateVirtualGoods();
 
     cocos2d::CCMenuItemImage    *soundOnButton;
     cocos2d::CCMenuItemImage    *soundOffButton;

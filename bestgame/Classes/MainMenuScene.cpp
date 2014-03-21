@@ -98,6 +98,8 @@ void MainMenuScene::onEnter()
     displayTournamentInfo();
     updateTournamentInfo();
     schedule(schedule_selector(MainMenuScene::updateTournamentInfo), 15);
+
+    updateVirtualGoods();
 }
 
 void MainMenuScene::onExit()
@@ -229,6 +231,33 @@ void MainMenuScene::updatedTournamentInfo(JNIEnv* env, jobject context, jstring 
 	env->ReleaseStringUTFChars(logo, tournamentLogo);
 
 	scheduleOnce(schedule_selector(MainMenuScene::displayTournamentInfo), 0);
+}
+
+void MainMenuScene::updatedVirtualGoods(JNIEnv* env, jobject context, jstring transactionId, jobjectArray virtualGoods) {
+    int length = env->GetArrayLength(virtualGoods);
+
+	for (int index = 0; index < length; index++) {
+		jstring goodString = (jstring) env->GetObjectArrayElement(virtualGoods, index);
+		const char* goodId = env->GetStringUTFChars(goodString, NULL);
+
+		// process each virtual good
+
+		env->ReleaseStringUTFChars(goodString, goodId);
+	}
+
+	const char* transId = env->GetStringUTFChars(transactionId, NULL);
+
+	JNIBridge::instance()->acknowledgeVirtualGoods(this, transId, true);
+
+	env->ReleaseStringUTFChars(transactionId, transId);
+}
+
+void MainMenuScene::rollbackVirtualGoods(JNIEnv* env, jobject context, jstring transactionId) {
+    const char* transId = env->GetStringUTFChars(transactionId, NULL);
+
+    // rollback the virtual goods for the given transaction ID
+
+    env->ReleaseStringUTFChars(transactionId, transId);
 }
 
 void MainMenuScene::goPlay(CCObject *pSender) {
@@ -409,4 +438,8 @@ void MainMenuScene::updateTournamentInfo() {
 void MainMenuScene::displayTournamentInfo() {
 	grantooButton->setVisible(!isTournamentRunning);
 	grantooTournButton->setVisible(isTournamentRunning);
+}
+
+void MainMenuScene::updateVirtualGoods() {
+	JNIBridge::instance()->syncVirtualGoods(this);
 }
