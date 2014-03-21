@@ -56,14 +56,19 @@ bool AppDelegate::applicationDidFinishLaunching() {
     // set FPS. the default value is 1.0/60 if you don't call this
     pDirector->setAnimationInterval(1.0 / 60);
 
+    // specify social integration capabilities
+    bool gameHasLogin = true;
+    bool gameHasInvite = true;
+    bool gameHasShare = true;
+
 #ifdef DEBUG
     // this is for test startup
     JNIBridge::useSandbox();
     // use the sandbox game key/secret pair
-    JNIBridge::initialize("50ac1a38f6aae30200000001", "c38b6697-b453-99c6-bc59-b50f0eca347f");
+    JNIBridge::initialize("50ac1a38f6aae30200000001", "c38b6697-b453-99c6-bc59-b50f0eca347f", gameHasLogin, gameHasInvite, gameHasShare);
 #else
     // use the production game key/secret pair
-    JNIBridge::initialize("50b665d167379a020000000b", "a918a013-842e-ceb9-19ec-c0f981894d85");
+    JNIBridge::initialize("50b665d167379a020000000b", "a918a013-842e-ceb9-19ec-c0f981894d85", gameHasLogin, gameHasInvite, gameHasShare);
 #endif
     JNIBridge::instance()->setOrientation("landscape");
 

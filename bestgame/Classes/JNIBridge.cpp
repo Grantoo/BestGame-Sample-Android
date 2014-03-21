@@ -34,6 +34,18 @@ void Java_org_grantoo_bestgame_NativeBridge_nativeUpdatedTournamentInfo(JNIEnv* 
 	JNIBridge::instance()->updatedTournamentInfo(env, thiz, name, campaignName, sponsorName, startDate, endDate, logo);
 }
 
+bool Java_org_grantoo_bestgame_NativeBridge_nativeSdkSocialLogin(JNIEnv* env, jobject thiz, jboolean allowCache) {
+    return JNIBridge::instance()->sdkSocialLogin(env, thiz, allowCache);
+}
+
+bool Java_org_grantoo_bestgame_NativeBridge_nativeSdkSocialInvite(JNIEnv* env, jobject thiz, jstring subject, jstring longMessage, jstring shortMessage, jstring linkUrl) {
+    return JNIBridge::instance()->sdkSocialInvite(env, thiz, subject, longMessage, shortMessage, linkUrl);
+}
+
+bool Java_org_grantoo_bestgame_NativeBridge_nativeSdkSocialShare(JNIEnv* env, jobject thiz, jstring subject, jstring longMessage, jstring shortMessage, jstring linkUrl) {
+    return JNIBridge::instance()->sdkSocialShare(env, thiz, subject, longMessage, shortMessage, linkUrl);
+}
+
 }
 
 static JNIBridge* s_instance = 0;
@@ -66,14 +78,14 @@ void JNIBridge::useSandbox() {
     return;
 }
 
-void JNIBridge::initialize(const char* gameId, const char* gameSecret) {
+void JNIBridge::initialize(const char* gameId, const char* gameSecret, bool gameHasLogin, bool gameHasInvite, bool gameHasShare) {
     JniMethodInfo jniMethodInfo;
 
     if (!JniHelper::getStaticMethodInfo(
 		jniMethodInfo,
 		"org/grantoo/bestgame/NativeBridge",
 		"initialize",
-		"(Ljava/lang/String;Ljava/lang/String;)V")) {
+		"(Ljava/lang/String;Ljava/lang/String;ZZZ)V")) {
     	// method info could not be obtained
     	return;
     }
@@ -87,15 +99,25 @@ void JNIBridge::initialize(const char* gameId, const char* gameSecret) {
 
     jstring jGameId = env->NewStringUTF(gameId);
     jstring jGameSecret = env->NewStringUTF(gameSecret);
+    jboolean jGameHasLogin = (jboolean) gameHasLogin;
+    jboolean jGameHasInvite = (jboolean) gameHasInvite;
+    jboolean jGameHasShare = (jboolean) gameHasShare;
 
     jniMethodInfo.env->CallStaticVoidMethod(
 		jniMethodInfo.classID,
 		jniMethodInfo.methodID,
 		jGameId,
-		jGameSecret);
+		jGameSecret,
+		jGameHasLogin,
+		jGameHasInvite,
+		jGameHasShare);
 
     env->DeleteLocalRef(jGameId);
     env->DeleteLocalRef(jGameSecret);
+
+    if (jAuxData) {
+    	env->DeleteLocalRef(jAuxData);
+    }
 
     if (jniMethodInfo.env->ExceptionCheck()) {
     	// exception thrown in the called method
@@ -241,6 +263,134 @@ void JNIBridge::sdkFailed(JNIEnv* env, jobject context, jstring message, jobject
 	if (m_callback) {
 		m_callback->sdkFailed(env, context, message, result);
 	}
+}
+
+bool JNIBridge::sdkSocialLogin(JNIEnv* env, jobject context, jboolean allowCache) {
+	if (m_callback) {
+		return m_callback->sdkSocialLogin(env, context, allowCache);
+	}
+
+	return false;
+}
+
+bool JNIBridge::sdkSocialInvite(JNIEnv* env, jobject context, jstring subject, jstring longMessage, jstring shortMessage, jstring linkUrl) {
+	if (m_callback) {
+		return m_callback->sdkSocialInvite(env, context, subject, longMessage, shortMessage, linkUrl);
+	}
+
+	return false;
+}
+
+bool JNIBridge::sdkSocialShare(JNIEnv* env, jobject context, jstring subject, jstring longMessage, jstring shortMessage, jstring linkUrl) {
+	if (m_callback) {
+		return m_callback->sdkSocialShare(env, context, subject, longMessage, shortMessage, linkUrl);
+	}
+
+	return false;
+}
+
+bool JNIBridge::sdkSocialLoginCompleted(const char* result) {
+    JniMethodInfo jniMethodInfo;
+
+    if (!JniHelper::getMethodInfo(
+        jniMethodInfo,
+        "org/grantoo/bestgame/NativeBridge",
+        "sdkSocialLoginCompleted",
+        "(Ljava/lang/String;)Z")) {
+        // method info could not be obtained
+        return false;
+    }
+
+    JNIEnv* env = 0;
+
+    if (!getEnv(&env)) {
+        // unable to get the environment
+        return false;
+    }
+
+    jstring jResult = NULL;
+
+    if (result) {
+    	jResult = env->NewStringUTF(result);
+    }
+
+    jboolean methodResult = jniMethodInfo.env->CallBooleanMethod(
+        m_nativeBridge,
+        jniMethodInfo.methodID,
+        jResult);
+
+    if (jResult) {
+    	env->DeleteLocalRef(jResult);
+    }
+
+    if (jniMethodInfo.env->ExceptionCheck()) {
+        // exception thrown in the called method
+        return false;
+    }
+
+    return (bool) methodResult;
+}
+
+bool JNIBridge::sdkSocialInviteCompleted() {
+    JniMethodInfo jniMethodInfo;
+
+    if (!JniHelper::getMethodInfo(
+        jniMethodInfo,
+        "org/grantoo/bestgame/NativeBridge",
+        "sdkSocialInviteCompleted",
+        "()Z")) {
+        // method info could not be obtained
+        return false;
+    }
+
+    JNIEnv* env = 0;
+
+    if (!getEnv(&env)) {
+        // unable to get the environment
+        return false;
+    }
+
+    jboolean methodResult = jniMethodInfo.env->CallBooleanMethod(
+        m_nativeBridge,
+        jniMethodInfo.methodID);
+
+    if (jniMethodInfo.env->ExceptionCheck()) {
+        // exception thrown in the called method
+        return false;
+    }
+
+    return (bool) methodResult;
+}
+
+bool JNIBridge::sdkSocialShareCompleted() {
+    JniMethodInfo jniMethodInfo;
+
+    if (!JniHelper::getMethodInfo(
+        jniMethodInfo,
+        "org/grantoo/bestgame/NativeBridge",
+        "sdkSocialShareCompleted",
+        "()Z")) {
+        // method info could not be obtained
+        return false;
+    }
+
+    JNIEnv* env = 0;
+
+    if (!getEnv(&env)) {
+        // unable to get the environment
+        return false;
+    }
+
+    jboolean methodResult = jniMethodInfo.env->CallBooleanMethod(
+        m_nativeBridge,
+        jniMethodInfo.methodID);
+
+    if (jniMethodInfo.env->ExceptionCheck()) {
+        // exception thrown in the called method
+        return false;
+    }
+
+    return (bool) methodResult;
 }
 
 void JNIBridge::updatedChallengeCount(JNIEnv* env, jobject context, jint count) {

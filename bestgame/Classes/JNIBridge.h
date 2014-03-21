@@ -11,7 +11,7 @@ class JNIBridge
 public:
 
 	static void useSandbox();
-	static void initialize(const char*, const char*);
+	static void initialize(const char*, const char*, bool gameHasLogin = false, bool gameHasInvite = false, bool gameHasShare = false);
 	static JNIBridge* instance(void);
 
 	virtual ~JNIBridge();
@@ -28,6 +28,14 @@ public:
 	void sdkCompletedWithExit(JNIEnv*, jobject);
 	void sdkCompletedWithMatch(JNIEnv*, jobject, jstring, jstring, jlong, jint, jint);
 	void sdkFailed(JNIEnv*, jobject, jstring, jobject);
+    bool sdkSocialLogin(JNIEnv*, jobject, jboolean);
+    bool sdkSocialInvite(JNIEnv*, jobject, jstring, jstring, jstring, jstring);
+    bool sdkSocialShare(JNIEnv*, jobject, jstring, jstring, jstring, jstring);
+
+	// social action completed methods called from C++ into the bridge
+    bool sdkSocialLoginCompleted(const char*);
+    bool sdkSocialInviteCompleted();
+    bool sdkSocialShareCompleted();
 
 	// sync methods called from C++ into the bridge
 	void syncChallengeCounts(JNIBridgeBroadcastReceiver*);

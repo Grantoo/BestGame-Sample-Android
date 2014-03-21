@@ -41,6 +41,9 @@ public:
     virtual void sdkCompletedWithExit(JNIEnv*, jobject);
     virtual void sdkCompletedWithMatch(JNIEnv*, jobject, jstring, jstring, jlong, jint, jint);
     virtual void sdkFailed(JNIEnv*, jobject, jstring, jobject);
+    virtual bool sdkSocialLogin(JNIEnv*, jobject, jboolean);
+    virtual bool sdkSocialInvite(JNIEnv*, jobject, jstring, jstring, jstring, jstring);
+    virtual bool sdkSocialShare(JNIEnv*, jobject, jstring, jstring, jstring, jstring);
 
     virtual void updatedChallengeCount(JNIEnv*, jobject, jint);
     virtual void updatedTournamentInfo(JNIEnv*, jobject, jstring, jstring, jstring, jlong, jlong, jstring);
